@@ -3,6 +3,21 @@ from collections import UserDict, defaultdict
 from datetime import datetime, timedelta
 import pickle
 
+class Messanger(ABC):
+
+    @abstractmethod
+    def send_message(self, message) -> None:
+        pass
+
+class TerminalMessanger(Messanger):
+    def send_message(self, message) -> None:
+        print(message)
+
+class WebMessanger(Messanger):
+    def send_message(self, message) -> None:
+        print(f"we dont have web interface yet")
+
+
 class Field(ABC):
 
     def __init__(self, value):
@@ -248,24 +263,42 @@ def parse_input(user_input):
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
-available_command = """Available commands:
-   - add <name> <phone>: Add a new contact with the given name and phone number.
-   - change <name> <old_phone> <new_phone>: Change the phone number for the contact with the given name.
-   - phone <name>: Get the phone numbers for the contact with the given name.
-   - all: Show all contacts.
-   - add-birthday <name> <birthday>: Add a birthday for the contact with the given name.
-   - show-birthday <name>: Show the birthday for the contact with the given name.
-   - birthdays: Show upcoming birthdays.
-   - close/exit: Close the application.
-   - command: Show available commands.
-"""
 
-if __name__ == "__main__":
-    loader = LoadDataPkl()
 
-    book = loader.load_data()
+# if __name__ == "__main__":
+def main():
+
+    available_command = """Available commands:
+       - add <name> <phone>: Add a new contact with the given name and phone number.
+       - change <name> <old_phone> <new_phone>: Change the phone number for the contact with the given name.
+       - phone <name>: Get the phone numbers for the contact with the given name.
+       - all: Show all contacts.
+       - add-birthday <name> <birthday>: Add a birthday for the contact with the given name.
+       - show-birthday <name>: Show the birthday for the contact with the given name.
+       - birthdays: Show upcoming birthdays.
+       - close/exit: Close the application.
+       - command: Show available commands.
+    """
 
     print(f"Welcome to the assistant bot!\n {available_command}")
+    user_interface = input("""
+    Choose your interface:"
+    1 = Terminal
+    2 = Web
+    >>> """)
+
+    if user_interface == "1":
+        messager = TerminalMessanger()
+
+    elif user_interface == "2":
+        messager = WebMessanger()
+        main()
+
+    else:
+        messager = None
+        print("unknown user interface")
+        main()
+
     while True:
         user_input = input("Enter a command: ")
         command, *args = parse_input(user_input)
@@ -276,27 +309,32 @@ if __name__ == "__main__":
             print("Good bye!")
             break
         elif command == "hello":
-            print("How can I help you?")
+            messager.send_message("How can I help you?")
         elif command == "command":
-            print(f"Welcome to the assistant bot!\n {available_command}")
+            messager.send_message(f"Welcome to the assistant bot!\n {available_command}")
         elif command == "add":
-            print(add_contact(args))
+            messager.send_message(add_contact(args))
         elif command == "change":
             name, phone_number, new_phone, *_ = args
-            print(edit_phone(args))
+            messager.send_message(edit_phone(args))
         elif command == "phone":
             # user phone number
             name, *_ = args
-            print(phone_username(name))
+            messager.send_message(phone_username(name))
         elif command == "all":
-            print(all_contact())
+            messager.send_message(all_contact())
         elif command == "add-birthday":
-            print(add_birthday(args))
+            messager.send_message(add_birthday(args))
         elif command == "show-birthday":
-            print(show_birthday(args))
+            messager.send_message(show_birthday(args))
         elif command == "birthdays":
-            print(book.birthdays())
+            messager.send_message(book.birthdays())
         else:
-            print("Invalid command.")
+            messager.send_message("Invalid command.")
 
+if __name__ == "__main__":
 
+    loader = LoadDataPkl()
+    book = loader.load_data()
+
+    main()
